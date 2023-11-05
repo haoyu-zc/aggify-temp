@@ -1,35 +1,69 @@
-CREATE OR REPLACE FUNCTION OrdersByCustomer(ckey integer)
-    RETURNS integer
+-- Internal states
+CREATE TYPE order_count_state AS
+(
+    order_count INTEGER,
+    is_initialized BOOLEAN
+);
+
+-- Size function
+CREATE OR REPLACE FUNCTION f_finalize(state order_count_state)
+    RETURNS INTEGER
+    IMMUTABLE AS
+$$
+BEGIN
+    RETURN SELECT 2;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Update function
+CREATE OR REPLACE FUNCTION f_update(state order_count_state, order_key BIGINT)
+    RETURNS order_count_state
+    IMMUTABLE AS
+$$
+DECLARE
+    result order_count_state;
+BEGIN
+    result.order_count = state.order_count + 1;
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Finalize function
+CREATE OR REPLACE FUNCTION f_finalize(state order_count_state)
+    RETURNS INTEGER
+    IMMUTABLE AS
+$$
+BEGIN
+    RETURN state.order_count;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Aggregate
+CREATE OR REPLACE AGGREGATE OrdersByCustomerAggregate (BIGINT)
+    (
+    stype = order_count_state,
+    sfunc = f_update,
+    finalfunc = f_finalize,
+    initcond = '(0, false)',
+    );
+
+-- UDF, Wrapper
+CREATE OR REPLACE FUNCTION OrdersByCustomerWithCustomAgg(cust_key INTEGER)
+    RETURNS INTEGER
     STABLE AS
 $$
 DECLARE
-    val     integer := 0;
+    val INTEGER;
 BEGIN
-    SELECT INTO val count_rows(O_ORDERKEY)
-    FROM (
-        SELECT O_ORDERKEY FROM orders WHERE O_CUSTKEY = custkey
-    ) AS q;
+    SELECT OrdersByCustomerAggregate(O_ORDERKEY)
+    FROM orders
+    WHERE O_CUSTKEY = cust_key
+    INTO val;
+    return val;
 END;
 $$ LANGUAGE plpgsql;
-
--- State Transition Function
-CREATE OR REPLACE FUNCTION count_state_transition(current_count bigint, next_value anyelement)
-    RETURNS bigint AS
-$$
-BEGIN
-    -- Increment the current count by 1
-    RETURN current_count + 1;
-END;
-$$ LANGUAGE plpgsql;
-
--- Custom Aggregate Function
-CREATE AGGREGATE count_rows(anyelement) (
-    SFUNC = count_state_transition,  -- State transition function
-    STYPE = bigint,                  -- State data type
-    INITCOND = '0'                   -- Initial condition of the state
-);
 
 /* UDF call */
 EXPLAIN ANALYZE
-SELECT C_CUSTKEY, OrdersByCustomer(C_CUSTKEY)
+SELECT C_CUSTKEY, OrdersByCustomerWithCustomAgg(C_CUSTKEY)
 FROM customer;
