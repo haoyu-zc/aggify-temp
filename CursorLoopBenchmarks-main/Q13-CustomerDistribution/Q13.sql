@@ -5,18 +5,8 @@ CREATE TYPE order_count_state AS
     is_initialized BOOLEAN
 );
 
--- Size function
-CREATE OR REPLACE FUNCTION f_finalize(state order_count_state)
-    RETURNS INTEGER
-    IMMUTABLE AS
-$$
-BEGIN
-    RETURN SELECT 2;
-END;
-$$ LANGUAGE plpgsql;
-
 -- Update function
-CREATE OR REPLACE FUNCTION f_update(state order_count_state, order_key BIGINT)
+CREATE OR REPLACE FUNCTION f_update(order_key BIGINT, state order_count_state)
     RETURNS order_count_state
     IMMUTABLE AS
 $$
@@ -39,12 +29,13 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Aggregate
-CREATE OR REPLACE AGGREGATE OrdersByCustomerAggregate (BIGINT)
+CREATE OR REPLACE AGGREGATE OrdersByCustomerAggregate (...) -- this ... refers the ... passed to OrdersByCustomerAggregate
     (
     stype = order_count_state,
     sfunc = f_update,
     finalfunc = f_finalize,
-    initcond = '(0, false)',
+    stype.order_count = 0,
+    stype.is_initialized = false
     );
 
 -- UDF, Wrapper
@@ -55,7 +46,7 @@ $$
 DECLARE
     val INTEGER;
 BEGIN
-    SELECT OrdersByCustomerAggregate(O_ORDERKEY)
+    SELECT OrdersByCustomerAggregate(O_ORDERKEY, ...)
     FROM orders
     WHERE O_CUSTKEY = cust_key
     INTO val;
