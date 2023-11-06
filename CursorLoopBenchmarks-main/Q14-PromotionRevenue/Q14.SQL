@@ -37,9 +37,8 @@ CREATE OR REPLACE AGGREGATE promo_revenue_agg(
     sfunc = f_update,
     stype = promo_revenue_accum,
     finalfunc = f_finalize,
-    initcond = '(0.0)',
-    combinefunc = promo_revenue_mergefunc,
-    parallel = safe
+    stype.revenue = 0.0,
+    stype.is_initialized = false
     );
 
 -- UDF, Wrapper

@@ -38,9 +38,9 @@ CREATE AGGREGATE MinCostSuppAggregate (...)
     STYPE = min_cost_state,
     SFUNC = f_update,
     FINALFUNC = f_finalize
-    min_cost_state.min_cost = 100000,
-    min_cost_state.supp_name = '',
-    min_cost_state.is_initialized = false
+    stype.min_cost = 100000,
+    stype.supp_name = '',
+    stype.is_initialized = false
 );
 
 -- UDF, Wrapper
