@@ -1,0 +1,63 @@
+-- Internal states
+CREATE TYPE min_cost_state AS (
+    min_cost DECIMAL(15, 2),
+    supp_name CHAR(25),
+    is_initialized BOOLEAN
+);
+
+-- Update function
+CREATE OR REPLACE FUNCTION f_update(
+    current_cost DECIMAL(15, 2), 
+    current_name CHAR(25), 
+    state min_cost_state
+)
+RETURNS min_cost_state
+LANGUAGE plpgsql AS $$
+BEGIN
+    IF current_cost < state.min_cost THEN
+        state.min_cost := current_cost;
+        state.supp_name := current_name;
+    END IF;
+    RETURN state;
+END;
+$$;
+
+-- Finalize function
+CREATE OR REPLACE FUNCTION f_finalize(state min_cost_state)
+RETURNS CHAR(25)
+LANGUAGE plpgsql AS $$
+BEGIN
+    RETURN state.supp_name;
+END;
+$$;
+
+-- Aggregate
+CREATE AGGREGATE MinCostSuppAggregate (...)
+(
+    BASETYPE = DECIMAL(15, 2),
+    STYPE = min_cost_state,
+    SFUNC = f_update,
+    FINALFUNC = f_finalize
+    min_cost_state.min_cost = 100000,
+    min_cost_state.supp_name = '',
+    min_cost_state.is_initialized = false
+);
+
+-- UDF, Wrapper
+CREATE OR REPLACE FUNCTION MinCostSuppWithCustomAgg(pk BIGINT)
+RETURNS CHAR(25)
+LANGUAGE plpgsql AS $$
+DECLARE
+    val CHAR(25);
+BEGIN
+    SELECT MinCostSuppAggregate(PS_SUPPLYCOST, S_NAME, ...)
+    FROM partsupp, supplier
+    WHERE PS_PARTKEY = pk AND PS_SUPPKEY = S_SUPPKEY
+    INTO val;
+    RETURN val;
+END;
+$$;
+
+-- UDF Call
+SELECT P_PARTKEY, MinCostSuppWithCustomAgg(P_PARTKEY)
+FROM part;
