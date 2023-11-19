@@ -9,11 +9,16 @@ CREATE TYPE min_cost_state AS (
 CREATE OR REPLACE FUNCTION f_update(
     current_cost DECIMAL(15, 2), 
     current_name CHAR(25), 
+    pmin_cost DECIMAL(15, 2), 
     state min_cost_state
 )
 RETURNS min_cost_state
 LANGUAGE plpgsql AS $$
 BEGIN
+    IF NOT state.is_initialized THEN
+        state.min_cost := pmin_cost;
+        state.is_initialized := true;
+    END IF;
     IF current_cost < state.min_cost THEN
         state.min_cost := current_cost;
         state.supp_name := current_name;
@@ -32,13 +37,13 @@ END;
 $$;
 
 -- Aggregate
-CREATE AGGREGATE MinCostSuppAggregate (...)
+CREATE AGGREGATE MinCostSuppAggregate ()
 (
     BASETYPE = DECIMAL(15, 2),
     STYPE = min_cost_state,
     SFUNC = f_update,
     FINALFUNC = f_finalize
-    stype.min_cost = 100000,
+    -- stype.min_cost = 100000,
     stype.supp_name = '',
     stype.is_initialized = false
 );
@@ -49,10 +54,14 @@ RETURNS CHAR(25)
 LANGUAGE plpgsql AS $$
 DECLARE
     val CHAR(25);
+    pmin_cost DECIMAL(15, 2);
 BEGIN
-    SELECT MinCostSuppAggregate(PS_SUPPLYCOST, S_NAME, ...)
-    FROM partsupp, supplier
-    WHERE PS_PARTKEY = pk AND PS_SUPPKEY = S_SUPPKEY
+    SELECT MinCostSuppAggregate(PS_SUPPLYCOST, S_NAME, pmin_cost)
+    FROM (SELECT PS_SUPPLYCOST, S_NAME
+                                     FROM partsupp,
+                                          supplier
+                                     WHERE PS_PARTKEY = key
+                                       AND PS_SUPPKEY = S_SUPPKEY)
     INTO val;
     RETURN val;
 END;
