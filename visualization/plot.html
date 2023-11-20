@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Aggify Visualization</title>
+    <!-- Include ECharts file from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+</head>
+
+<!-- 811.500000
+2269.900000
+9058.300000
+4546.100000
+820.700000
+6001.700000 -->
+
+<body>
+    <!-- Container for the ECharts visualization -->
+    <div id="chart" style="width: 1100px;height:650px;"></div>
+    <script type="text/javascript">
+        // Based on prepared DOM, initialize echarts instance
+        var myChart = echarts.init(document.getElementById('chart'));
+
+        // Hardcoded data for the example
+        var avgTimesAgg = [549.1, 2204.9, 5167.3, 4319.4, 524.0, 2819.8];
+        var avgTimesBuiltin_nproc = [348.0, 919.4, 3738.8, 765.4, 756.1, 1158.6];
+        var workLoadNames = ['OrdersByCustomer', 'PromoRevenue', 'VolumeCustomer', 'Discount Revenue', 'MinCostSupplier', 'WaitingOrders'];
+        var workLoadNames_short = ['OBC', 'PR', 'VC', 'DR', 'MC', 'WO'];
+        var ratios = avgTimesAgg.map(function (item, index) {
+            return item / avgTimesBuiltin_nproc[index];
+        });
+
+        // Specify the configuration items and data for the chart
+        var option = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    crossStyle: {
+                        color: '#999'
+                    }
+                }
+            },
+            toolbox: {
+                feature: {
+                    dataView: { show: true, readOnly: false },
+                    magicType: { show: true, type: ['line', 'bar'] },
+                    restore: { show: true },
+                    saveAsImage: { show: true }
+                }
+            },
+            legend: {
+                data: ['Custom Aggregate', 'Built-in Aggregate', 'Ratio: Custom / Built-in']
+            },
+            xAxis: [
+                {
+                    type: 'category',
+                    data: workLoadNames,
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                }
+            ],
+            yAxis: [
+                {
+                    type: 'value',
+                    name: 'Average Time (ms)',
+                    min: 0,
+                    axisLabel: {
+                        formatter: '{value} ms'
+                    }
+                },
+                {
+                    type: 'value',
+                    name: 'Ratio: Custom / Built-in',
+                    min: 0,
+                    axisLabel: {
+                        formatter: '{value}'
+                    }
+                }
+            ],
+            series: [
+                {
+                    name: 'Custom Aggregate',
+                    type: 'bar',
+                    data: avgTimesAgg
+                },
+                {
+                    name: 'Built-in Aggregate',
+                    type: 'bar',
+                    data: avgTimesBuiltin_nproc
+                },
+                {
+                    name: 'Ratio: Custom / Built-in',
+                    type: 'line',
+                    yAxisIndex: 1,
+                    data: ratios
+                }
+            ]
+        };
+
+        // Use the specified configuration items and data to show the chart
+        myChart.setOption(option);
+    </script>
+</body>
+
+</html>
