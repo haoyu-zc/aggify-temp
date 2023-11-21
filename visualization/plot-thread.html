@@ -22,13 +22,13 @@
         var workLoadNames = ['OrdersByCustomer', 'PromoRevenue', 'VolumeCustomer', 'Discount Revenue', 'MinCostSupplier', 'WaitingOrders'];
         var workLoadNames_short = ['OBC', 'PR', 'VC', 'DR', 'MC', 'WO'];
         var ratios = avgTimesAgg.map(function (item, index) {
-            return avgTimesBuiltin_nproc[index] / item;
+            return avgTimesBuiltin_nproc1[index] / item;
         });
 
         // Specify the configuration items and data for the chart
         var option = {
             title: {
-                text: 'Performance Comparison of Custom vs Built-in Aggregations - Multithreading', // The title text
+                text: 'Performance Comparison of Custom vs Built-in Aggregations - Single Thread', // The title text
                 left: 'center', // The position of the title
                 top: 20 // The top margin of the title
             },
@@ -92,7 +92,7 @@
                 {
                     name: 'Built-in Aggregate',
                     type: 'bar',
-                    data: avgTimesBuiltin_nproc
+                    data: avgTimesBuiltin_nproc1
                 },
                 {
                     name: 'Speedup: Built-in / Custom',
