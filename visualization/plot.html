@@ -16,9 +16,13 @@
         var myChart = echarts.init(document.getElementById('chart'));
 
         // Hardcoded data for the example
-        var avgTimesAgg = [549.1, 2204.9, 5167.3, 4319.4, 524.0, 2819.8];
-        var avgTimesBuiltin_nproc = [348.0, 919.4, 3738.8, 765.4, 756.1, 1158.6];
-        var avgTimesBuiltin_nproc1 = [811.5, 2269.9, 9058.3, 4546.1, 820.7, 6001.7];
+        var avgTimesAgg = [549.1, 2204.9, 5167.3, 4319.4, 524.0, 2819.8].map(function (time) {
+            return time / 1000; // Convert from milliseconds to seconds
+        });
+        var avgTimesBuiltin_nproc = [348.0, 919.4, 3738.8, 765.4, 756.1, 1158.6].map(function (time) {
+            return time / 1000; // Convert from milliseconds to seconds
+        })
+        var workLoadNames = ['OrdersByCustomer', 'PromoRevenue', 'VolumeCustomer', 'Discount Revenue', 'MinCostSupplier', 'WaitingOrders'];
         var workLoadNames = ['OrdersByCustomer', 'PromoRevenue', 'VolumeCustomer', 'Discount Revenue', 'MinCostSupplier', 'WaitingOrders'];
         var workLoadNames_short = ['OBC', 'PR', 'VC', 'DR', 'MC', 'WO'];
         var ratios = avgTimesAgg.map(function (item, index) {
@@ -28,7 +32,7 @@
         // Specify the configuration items and data for the chart
         var option = {
             title: {
-                text: 'Performance Comparison of Custom vs Built-in Aggregations - Multithreading', // The title text
+                text: 'Performance Comparison of Custom vs Built-in Aggregations - Multi-Threaded', // The title text
                 left: 'center', // The position of the title
                 top: 20 // The top margin of the title
             },
@@ -68,18 +72,24 @@
             yAxis: [
                 {
                     type: 'value',
-                    name: 'Average Time (ms)',
+                    name: 'Average Time (s)',
                     min: 0,
+                    splitLine: { show: false },
                     axisLabel: {
-                        formatter: '{value} ms'
+                        formatter: function (value, index) {
+                            return value.toFixed(2) + ' s'; // Keep two decimal places
+                        }
                     }
                 },
                 {
                     type: 'value',
-                    name: 'Speedup: Built-in / Custom',
+                    name: 'Speedup',
                     min: 0,
+                    axisPointer: {
+                        type: 'none' // No line indicator for this series
+                    },
                     axisLabel: {
-                        formatter: '{value}'
+                        formatter: '{value} x'
                     }
                 }
             ],
@@ -87,18 +97,40 @@
                 {
                     name: 'Custom Aggregate',
                     type: 'bar',
-                    data: avgTimesAgg
+                    data: avgTimesAgg,
+                    label: {
+                        show: true, // Show the label above each bar
+                        position: 'top', // Position it on top of the bar
+                        formatter: function (params) {
+                            return params.value.toFixed(2) + ' s'; // Keep two decimal places
+                        }
+                    }
                 },
                 {
                     name: 'Built-in Aggregate',
                     type: 'bar',
-                    data: avgTimesBuiltin_nproc
+                    data: avgTimesBuiltin_nproc,
+                    label: {
+                        show: true, // Show the label above each bar
+                        position: 'top', // Position it on top of the bar
+                        formatter: function (params) {
+                            return params.value.toFixed(2) + ' s'; // Keep two decimal places
+                        }
+                    }
                 },
                 {
-                    name: 'Speedup: Built-in / Custom',
+                    name: 'Speedup',
                     type: 'line',
                     yAxisIndex: 1,
-                    data: ratios
+                    data: ratios,
+                    label: {
+                        color: "#d90429", // if ratio > 1, green, else red?
+                        show: true, // Show the label above each bar
+                        position: 'top', // Position it on top of the bar
+                        formatter: function (params) {
+                            return params.value.toFixed(2); // Keep two decimal places
+                        }
+                    }
                 }
             ]
         };
