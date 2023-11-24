@@ -16,6 +16,10 @@ $$
 DECLARE
     result waiting_orders_state;
 BEGIN
+    IF NOT state.is_initialized THEN
+        state.is_initialized := true;
+        state.waiting_orders := 0;
+    END IF;
     result.waiting_orders = state.waiting_orders + 1;
     RETURN result;
 END;
@@ -41,7 +45,7 @@ CREATE OR REPLACE AGGREGATE WaitingOrdersAggregate (ok bigint,
     sfunc = f_update,
     stype = waiting_orders_state,
     finalfunc = f_finalize,
-    stype.waiting_orders = 0,
+    -- stype.waiting_orders = 0,
     stype.is_initialized = false
     );
 
