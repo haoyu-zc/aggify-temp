@@ -13,6 +13,10 @@ CREATE OR REPLACE FUNCTION f_update(
     IMMUTABLE AS
 $$
 BEGIN
+    IF NOT state.is_initialized THEN
+        state.is_initialized := true;
+        state.volume := 0.0;
+    END IF;
     state.volume := state.volume + volume;
     RETURN state;
 END;
