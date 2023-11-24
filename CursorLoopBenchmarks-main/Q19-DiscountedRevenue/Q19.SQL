@@ -12,6 +12,10 @@ CREATE OR REPLACE FUNCTION f_update(state discount_revenue_accum, extendedPrice 
     IMMUTABLE AS
 $$
 BEGIN
+    IF NOT state.is_initialized THEN
+        state.is_initialized := true;
+        state.revenue := 0.0;
+    END IF;
     state.revenue := state.revenue + (extendedPrice * (1 - discount));
     RETURN state;
 END;
@@ -32,7 +36,7 @@ CREATE OR REPLACE AGGREGATE sum_discounted_price(extendedPrice decimal(15, 2), d
     sfunc = f_update,
     stype = discount_revenue_accum,
     finalfunc = f_finalize,
-    stype.revenue = 0.0,
+    -- stype.revenue = 0.0,
     stype.is_initialized = false
     );
 
