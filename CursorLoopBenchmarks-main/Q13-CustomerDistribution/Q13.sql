@@ -33,7 +33,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Aggregate
-CREATE OR REPLACE AGGREGATE OrdersByCustomerAggregate (...) -- this ... refers the ... passed to OrdersByCustomerAggregate
+-- CREATE OR REPLACE AGGREGATE OrdersByCustomerAggregate (...) -- this ... refers the ... passed to OrdersByCustomerAggregate
+CREATE OR REPLACE AGGREGATE OrdersByCustomerAggregate ()
     (
     stype = order_count_state,
     sfunc = f_update,
