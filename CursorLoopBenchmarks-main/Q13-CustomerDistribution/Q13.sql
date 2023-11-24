@@ -13,6 +13,10 @@ $$
 DECLARE
     result order_count_state;
 BEGIN
+    IF NOT state.is_initialized THEN
+        state.is_initialized := true;
+        state.order_count := 0;
+    END IF;
     result.order_count = state.order_count + 1;
     RETURN result;
 END;
@@ -34,7 +38,7 @@ CREATE OR REPLACE AGGREGATE OrdersByCustomerAggregate (...) -- this ... refers t
     stype = order_count_state,
     sfunc = f_update,
     finalfunc = f_finalize,
-    stype.order_count = 0,
+    -- stype.order_count = 0,
     stype.is_initialized = false
     );
 
