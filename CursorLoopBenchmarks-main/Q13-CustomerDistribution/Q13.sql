@@ -51,7 +51,7 @@ $$
 DECLARE
     custkey integer := ckey;
     okey    bigint;
-    val INTEGER;
+    val INTEGER := 0;
 BEGIN
     SELECT OrdersByCustomerAggregate(O_ORDERKEY, val)
     FROM orders
