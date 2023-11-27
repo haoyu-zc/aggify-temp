@@ -6,10 +6,11 @@ CREATE TYPE waiting_orders_state AS
 );
 
 -- Update function
-CREATE OR REPLACE FUNCTION f_update(state waiting_orders_state, ok bigint,
-                                                    pk int,
-                                                    sk int,
-                                                    ln int)
+CREATE OR REPLACE FUNCTION f_update(ok bigint,
+                                    pk int,
+                                    sk int,
+                                    ln int,
+                                    val bigint)
     RETURNS waiting_orders_state
     IMMUTABLE AS
 $$
@@ -18,7 +19,7 @@ DECLARE
 BEGIN
     IF NOT state.is_initialized THEN
         state.is_initialized := true;
-        state.waiting_orders := 0;
+        state.waiting_orders := val;
     END IF;
     result.waiting_orders = state.waiting_orders + 1;
     RETURN result;
@@ -40,12 +41,11 @@ CREATE OR REPLACE AGGREGATE WaitingOrdersAggregate (ok bigint,
     pk int,
     sk int,
     ln int,
-    ...)
+    val bigint)
     (
     sfunc = f_update,
     stype = waiting_orders_state,
     finalfunc = f_finalize,
-    -- stype.waiting_orders = 0,
     stype.is_initialized = false
     );
 
@@ -58,7 +58,7 @@ DECLARE
     skey bigint := suppkey;
     val  bigint := 0;
 BEGIN
-    SELECT WaitingOrdersAggregate(Q.ok, Q.pk, Q.sk, Q.ln, ...)
+    SELECT WaitingOrdersAggregate(Q.ok, Q.pk, Q.sk, Q.ln, val)
     INTO val
     FROM (SELECT L_ORDERKEY as ok, L_PARTKEY as pk, L_SUPPKEY as sk, L_LINENUMBER as ln
           FROM lineitem l1,
