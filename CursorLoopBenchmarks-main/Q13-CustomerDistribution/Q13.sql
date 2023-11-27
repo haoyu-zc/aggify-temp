@@ -54,8 +54,7 @@ DECLARE
     val INTEGER := 0;
 BEGIN
     SELECT OrdersByCustomerAggregate(O_ORDERKEY, val)
-    FROM orders
-    WHERE O_CUSTKEY = cust_key
+    FROM (SELECT O_ORDERKEY FROM orders WHERE O_CUSTKEY = custkey) S
     INTO val;
     return val;
 END;

@@ -55,13 +55,17 @@ LANGUAGE plpgsql AS $$
 DECLARE
     val CHAR(25);
     pmin_cost DECIMAL(15, 2);
+    key         bigint         := pk;
+    fetchedCost decimal(15, 2);
+    fetchedName char(25);
+    minCost     decimal(25, 2) := 100000;
 BEGIN
     SELECT MinCostSuppAggregate(PS_SUPPLYCOST, S_NAME, pmin_cost)
     FROM (SELECT PS_SUPPLYCOST, S_NAME
                                      FROM partsupp,
                                           supplier
                                      WHERE PS_PARTKEY = key
-                                       AND PS_SUPPKEY = S_SUPPKEY)
+                                       AND PS_SUPPKEY = S_SUPPKEY) S
     INTO val;
     RETURN val;
 END;
