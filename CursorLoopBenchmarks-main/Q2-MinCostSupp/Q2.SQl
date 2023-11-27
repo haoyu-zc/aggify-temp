@@ -10,7 +10,6 @@ CREATE OR REPLACE FUNCTION f_update(
     current_cost DECIMAL(15, 2), 
     current_name CHAR(25), 
     pmin_cost DECIMAL(15, 2), 
-    state min_cost_state
 )
 RETURNS min_cost_state
 LANGUAGE plpgsql AS $$
@@ -28,7 +27,7 @@ END;
 $$;
 
 -- Finalize function
-CREATE OR REPLACE FUNCTION f_finalize(state min_cost_state)
+CREATE OR REPLACE FUNCTION f_finalize()
 RETURNS CHAR(25)
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -53,12 +52,9 @@ CREATE OR REPLACE FUNCTION MinCostSuppWithCustomAgg(pk BIGINT)
 RETURNS CHAR(25)
 LANGUAGE plpgsql AS $$
 DECLARE
-    val CHAR(25);
-    pmin_cost DECIMAL(15, 2);
     key         bigint         := pk;
-    fetchedCost decimal(15, 2);
-    fetchedName char(25);
-    minCost     decimal(25, 2) := 100000;
+    val         CHAR(25);
+    pmin_cost   DECIMAL(25, 2) := 100000;
 BEGIN
     SELECT MinCostSuppAggregate(PS_SUPPLYCOST, S_NAME, pmin_cost)
     FROM (SELECT PS_SUPPLYCOST, S_NAME
