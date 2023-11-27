@@ -6,7 +6,7 @@ CREATE TYPE order_count_state AS
 );
 
 -- Update function
-CREATE OR REPLACE FUNCTION f_update(order_key BIGINT, state order_count_state)
+CREATE OR REPLACE FUNCTION f_update(order_key BIGINT, val INTEGER)
     RETURNS order_count_state
     IMMUTABLE AS
 $$
@@ -15,7 +15,7 @@ DECLARE
 BEGIN
     IF NOT state.is_initialized THEN
         state.is_initialized := true;
-        state.order_count := 0;
+        state.order_count := val;
     END IF;
     result.order_count = state.order_count + 1;
     RETURN result;
@@ -23,7 +23,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Finalize function
-CREATE OR REPLACE FUNCTION f_finalize(state order_count_state)
+CREATE OR REPLACE FUNCTION f_finalize()
     RETURNS INTEGER
     IMMUTABLE AS
 $$
@@ -34,7 +34,7 @@ $$ LANGUAGE plpgsql;
 
 -- Aggregate
 -- CREATE OR REPLACE AGGREGATE OrdersByCustomerAggregate (...) -- this ... refers the ... passed to OrdersByCustomerAggregate
-CREATE OR REPLACE AGGREGATE OrdersByCustomerAggregate ()
+CREATE OR REPLACE AGGREGATE OrdersByCustomerAggregate (order_key BIGINT, val INTEGER)
     (
     stype = order_count_state,
     sfunc = f_update,
@@ -49,9 +49,11 @@ CREATE OR REPLACE FUNCTION OrdersByCustomerWithCustomAgg(cust_key INTEGER)
     STABLE AS
 $$
 DECLARE
+    custkey integer := ckey;
+    okey    bigint;
     val INTEGER;
 BEGIN
-    SELECT OrdersByCustomerAggregate(O_ORDERKEY, ...)
+    SELECT OrdersByCustomerAggregate(O_ORDERKEY, val)
     FROM orders
     WHERE O_CUSTKEY = cust_key
     INTO val;
