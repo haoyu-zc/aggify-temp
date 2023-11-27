@@ -7,7 +7,6 @@ CREATE TYPE volume_customer_accum AS
 
 -- Update function
 CREATE OR REPLACE FUNCTION f_update(
-    state volume_customer_accum,
     volume DECIMAL(12, 2)
 ) RETURNS volume_customer_accum
     IMMUTABLE AS
@@ -15,7 +14,7 @@ $$
 BEGIN
     IF NOT state.is_initialized THEN
         state.is_initialized := true;
-        state.volume := 0.0;
+        state.volume := volume;
     END IF;
     state.volume := state.volume + volume;
     RETURN state;
@@ -38,7 +37,6 @@ CREATE OR REPLACE AGGREGATE volume_customer_agg(
     sfunc = f_update,
     stype = volume_customer_accum,
     finalfunc = f_finalize,
-    stype.volume = 0.0,
     stype.is_initialized = false
     );
 
