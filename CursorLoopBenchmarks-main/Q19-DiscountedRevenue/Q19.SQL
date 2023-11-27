@@ -6,15 +6,16 @@ CREATE TYPE discount_revenue_accum AS
 );
 
 -- Update function
-CREATE OR REPLACE FUNCTION f_update(state discount_revenue_accum, extendedPrice decimal(15, 2),
-                                                 discount decimal(15, 2))
+CREATE OR REPLACE FUNCTION f_update(extendedPrice decimal(15, 2),
+                                    discount decimal(15, 2)
+                                    val decimal(15, 2))
     RETURNS discount_revenue_accum
     IMMUTABLE AS
 $$
 BEGIN
     IF NOT state.is_initialized THEN
         state.is_initialized := true;
-        state.revenue := 0.0;
+        state.revenue := val;
     END IF;
     state.revenue := state.revenue + (extendedPrice * (1 - discount));
     RETURN state;
@@ -45,9 +46,11 @@ CREATE OR REPLACE FUNCTION DiscountedRevenueWithCustomAgg()
     RETURNS decimal(15, 2)
     STABLE AS
 $$
+DECLARE
+    val decimal(15, 2) := 0;
 BEGIN
     RETURN (
-        (SELECT sum_discounted_price(L_EXTENDEDPRICE, L_DISCOUNT)
+        (SELECT sum_discounted_price(L_EXTENDEDPRICE, L_DISCOUNT, val)
          FROM lineitem,
               part
          WHERE ((P_PARTKEY = L_PARTKEY AND P_BRAND = 'Brand#12'
