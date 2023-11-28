@@ -10,7 +10,7 @@ DECLARE
 BEGIN
     if exists (select L_QUANTITY from lineitem 
                 WHERE L_ORDERKEY = ok) then
-        d := (SELECT (L_QUANTITY, d) FROM 
+        d := (SELECT volume_customer_agg(L_QUANTITY, d) FROM 
                 (select L_QUANTITY from lineitem 
                     WHERE L_ORDERKEY = ok) tmp);
     end if;
