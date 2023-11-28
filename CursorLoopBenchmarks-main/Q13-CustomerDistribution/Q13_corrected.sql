@@ -9,7 +9,7 @@ DECLARE
     val INTEGER := 0;
 BEGIN
     if exists (SELECT O_ORDERKEY FROM orders WHERE O_CUSTKEY = custkey) then
-        val := (SELECT (O_ORDERKEY, val)
+        val := (SELECT ordersbycustomeraggregate(O_ORDERKEY, val)
         FROM (SELECT O_ORDERKEY FROM orders WHERE O_CUSTKEY = custkey) S);
     end if;
     return val;
