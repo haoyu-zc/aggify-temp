@@ -16,6 +16,22 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION OrdersByCustomerWithCustomAgg(cust_key INTEGER)
+    RETURNS INTEGER
+    STABLE AS
+$$
+DECLARE
+    custkey integer := cust_key;
+    okey    bigint;
+    val INTEGER := 0;
+BEGIN
+    val := (SELECT 
+    case when count(*) > 0 then ordersbycustomeraggregate(O_ORDERKEY, val) else val end 
+    FROM (SELECT O_ORDERKEY FROM orders WHERE O_CUSTKEY = custkey) S);
+    end if;
+    return val;
+END;
+$$ LANGUAGE plpgsql;
 -- Q:
 
 SELECT C_CUSTKEY, OrdersByCustomerWithCustomAgg(C_CUSTKEY)
