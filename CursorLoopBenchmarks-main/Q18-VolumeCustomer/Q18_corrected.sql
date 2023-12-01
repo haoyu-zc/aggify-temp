@@ -22,7 +22,29 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION VolumeCustomerWithCustomAgg(orderkey bigint)
+    RETURNS int
+    STABLE AS
+$$
+DECLARE
+    ok bigint         := orderkey;
+    i  int            := 0;
+    d  decimal(12, 2) := 0;
+BEGIN
+    d := (SELECT case when count(*) > 0 then
+    volume_customer_agg(L_QUANTITY, d) else d end FROM 
+            (select L_QUANTITY from lineitem 
+                WHERE L_ORDERKEY = ok) tmp);
+    IF d > 300 THEN
+        i := 1;
+    END IF;
+
+    RETURN i;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Q:
 SELECT O_ORDERKEY, O_TOTALPRICE
 FROM orders
 WHERE VolumeCustomerWithCustomAgg(O_ORDERKEY) = 1;
+
