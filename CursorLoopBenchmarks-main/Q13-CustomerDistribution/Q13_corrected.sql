@@ -28,7 +28,6 @@ BEGIN
     val := (SELECT 
     case when count(*) > 0 then ordersbycustomeraggregate(O_ORDERKEY, val) else val end 
     FROM (SELECT O_ORDERKEY FROM orders WHERE O_CUSTKEY = custkey) S);
-    end if;
     return val;
 END;
 $$ LANGUAGE plpgsql;
