@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Aggify Visualization</title>
+    <!-- Include ECharts file from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+</head>
+
+<body>
+    <!-- Container for the ECharts visualization -->
+    <div id="chart" style="width: 1100px;height:650px;"></div>
+    <script type="text/javascript">
+        // Based on prepared DOM, initialize echarts instance
+        var myChart = echarts.init(document.getElementById('chart'));
+
+        // Hardcoded data for the example
+        var avgTimesAgg = [549.1, 2204.9, 5167.3, 4319.4, 524.0, 2819.8].map(function (time) {
+            return time / 1000; // Convert from milliseconds to seconds
+        });
+        var avgTimesBuiltin_nproc = [348.0, 919.4, 3738.8, 765.4, 756.1, 1158.6].map(function (time) {
+            return time / 1000; // Convert from milliseconds to seconds
+        })
+
+        var avgTimesIf = [1606.6, 2001.8, 13740.0, 4635.1, 1564.2, 7383.5].map(function (time) {
+            return time / 1000; // Convert from milliseconds to seconds
+        });
+
+        var avgTimesCase = [1478.5, 1589.2, 9040.3, 4007.8, 1309.2, 2895.8].map(function (time) {
+            return time / 1000; // Convert from milliseconds to seconds
+        });
+        var workLoadNames = ['OrdersByCustomer', 'PromoRevenue', 'VolumeCustomer', 'Discount Revenue', 'MinCostSupplier', 'WaitingOrders'];
+        var workLoadNames_short = ['OBC', 'PR', 'VC', 'DR', 'MC', 'WO'];
+        var ratios = avgTimesAgg.map(function (item, index) {
+            return avgTimesBuiltin_nproc[index] / item;
+        });
+
+        // Specify the configuration items and data for the chart
+        var option = {
+            title: {
+                text: 'Performance Comparison of Custom vs. Case-When vs. If-Exists - Multi-Threaded', // The title text
+                left: 'center', // The position of the title
+                top: 20 // The top margin of the title
+            },
+            legend: {
+                // data: ['Custom Aggregate', 'Built-in Aggregate', 'Ratio: Custom / Built-in'],
+                top: '10%', // Adjust this value as needed to position the legend below the title
+                left: 'center', // Align the legend to the center, beneath the title
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    crossStyle: {
+                        color: '#999'
+                    }
+                }
+            },
+            toolbox: {
+                bottom: '1%',
+                left: 'center',
+                feature: {
+                    dataView: { show: true, readOnly: false },
+                    magicType: { show: true, type: ['line', 'bar'] },
+                    restore: { show: true },
+                    saveAsImage: { show: true }
+                }
+            },
+            xAxis: [
+                {
+                    type: 'category',
+                    name: 'Workload',
+                    data: workLoadNames,
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                }
+            ],
+            yAxis: [
+                {
+                    type: 'value',
+                    name: 'Average Time (s)',
+                    min: 0,
+                    splitLine: { show: false },
+                    axisLabel: {
+                        formatter: function (value, index) {
+                            return value.toFixed(2) + ' s'; // Keep two decimal places
+                        }
+                    }
+                },
+                // {
+                //     type: 'value',
+                //     name: 'Speedup',
+                //     min: 0,
+                //     axisPointer: {
+                //         type: 'none' // No line indicator for this series
+                //     },
+                //     axisLabel: {
+                //         formatter: '{value} x'
+                //     }
+                // }
+            ],
+            series: [
+                {
+                    name: 'Custom Aggregate',
+                    type: 'bar',
+                    data: avgTimesAgg,
+                    label: {
+                        show: true, // Show the label above each bar
+                        position: 'top', // Position it on top of the bar
+                        formatter: function (params) {
+                            return params.value.toFixed(2) + ' s'; // Keep two decimal places
+                        }
+                    }
+                },
+                {
+                    name: 'If-Exists',
+                    type: 'bar',
+                    data: avgTimesIf,
+                    label: {
+                        show: true, // Show the label above each bar
+                        position: 'top', // Position it on top of the bar
+                        formatter: function (params) {
+                            return params.value.toFixed(2) + ' s'; // Keep two decimal places
+                        }
+                    }
+                },
+                {
+                    name: 'Case-When',
+                    type: 'bar',
+                    data: avgTimesCase,
+                    label: {
+                        show: true, // Show the label above each bar
+                        position: 'top', // Position it on top of the bar
+                        formatter: function (params) {
+                            return params.value.toFixed(2) + ' s'; // Keep two decimal places
+                        }
+                    }
+                },
+                // {
+                //     name: 'Speedup',
+                //     type: 'line',
+                //     yAxisIndex: 1,
+                //     data: ratios,
+                //     label: {
+                //         color: "#d90429", // if ratio > 1, green, else red?
+                //         show: true, // Show the label above each bar
+                //         position: 'top', // Position it on top of the bar
+                //         formatter: function (params) {
+                //             return params.value.toFixed(2); // Keep two decimal places
+                //         }
+                //     }
+                // }
+            ]
+        };
+
+        // Use the specified configuration items and data to show the chart
+        myChart.setOption(option);
+    </script>
+</body>
+
+</html>
